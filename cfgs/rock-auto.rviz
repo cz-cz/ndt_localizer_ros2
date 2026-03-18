@@ -1,43 +1,36 @@
 Panels:
-  - Class: rviz/Displays
+  - Class: rviz_common/Displays
     Help Height: 0
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Global Options1
       Splitter Ratio: 0.6958039999008179
-    Tree Height: 776
-  - Class: rviz/Selection
+    Tree Height: 339
+  - Class: rviz_common/Selection
     Name: Selection
-  - Class: rviz/Tool Properties
+  - Class: rviz_common/Tool Properties
     Expanded:
       - /2D Pose Estimate1
-      - /2D Nav Goal1
       - /Publish Point1
     Name: Tool Properties
     Splitter Ratio: 0.5886790156364441
-  - Class: rviz/Views
+  - Class: rviz_common/Views
     Expanded:
       - /Current View1
     Name: Views
     Splitter Ratio: 0.5
-  - Class: rviz/Time
+  - Class: rviz_common/Time
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
-  - Class: jsk_rviz_plugin/YesNoButton
-    Name: YesNoButton
-Preferences:
-  PromptSaveOnExit: true
-Toolbars:
-  toolButtonStyle: 2
+    SyncSource: PointCloud2_Map
 Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
       Cell Size: 1
-      Class: rviz/Grid
+      Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: false
       Line Style:
@@ -53,7 +46,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: false
-    - Class: rviz/TF
+    - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
@@ -77,56 +70,6 @@ Visualization Manager:
             {}
       Update Interval: 0
       Value: true
-    - Buffer length: 100
-      Class: jsk_rviz_plugin/Plotter2D
-      Enabled: true
-      Name: NDT时间(ms)
-      Show Value: true
-      Topic: /time_ndt_matching
-      Value: true
-      auto color change: false
-      auto scale: true
-      background color: 0; 0; 0
-      backround alpha: 0
-      border: true
-      foreground alpha: 0.699999988079071
-      foreground color: 21; 223; 210
-      height: 128
-      left: 200
-      linewidth: 1
-      max color: 255; 0; 0
-      max value: 1
-      min value: -1
-      show caption: true
-      text size: 12
-      top: 40
-      update interval: 0.10000000149011612
-      width: 128
-    - Buffer length: 100
-      Class: jsk_rviz_plugin/Plotter2D
-      Enabled: true
-      Name: 速度(km/h)
-      Show Value: true
-      Topic: /estimated_vel_kmph
-      Value: true
-      auto color change: false
-      auto scale: true
-      background color: 0; 0; 0
-      backround alpha: 0
-      border: true
-      foreground alpha: 0.699999988079071
-      foreground color: 0; 185; 0
-      height: 128
-      left: 40
-      linewidth: 1
-      max color: 255; 0; 0
-      max value: 1
-      min value: -1
-      show caption: true
-      text size: 12
-      top: 40
-      update interval: 0.10000000149011612
-      width: 128
     - Alpha: 0.5
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -135,7 +78,7 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/PointCloud2
+      Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: FlatColor
       Decay Time: 0
@@ -145,15 +88,19 @@ Visualization Manager:
       Max Intensity: 31.179500579833984
       Min Color: 0; 0; 0
       Min Intensity: 4
-      Name: PointCloud2
+      Name: PointCloud2_Map
       Position Transformer: XYZ
-      Queue Size: 10
       Selectable: true
       Size (Pixels): 1
       Size (m): 0.009999999776482582
       Style: Points
-      Topic: /points_map
-      Unreliable: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /points_map
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -165,7 +112,7 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/PointCloud2
+      Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
@@ -175,15 +122,19 @@ Visualization Manager:
       Max Intensity: 211
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: PointCloud2_Sensor
       Position Transformer: XYZ
-      Queue Size: 10
       Selectable: true
       Size (Pixels): 1
       Size (m): 0.009999999776482582
       Style: Points
-      Topic: /os1_points
-      Unreliable: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /os1_points
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -195,7 +146,7 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/PointCloud2
+      Class: rviz_default_plugins/PointCloud2
       Color: 252; 233; 79
       Color Transformer: FlatColor
       Decay Time: 0
@@ -205,21 +156,33 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: PointCloud2_Filtered
       Position Transformer: XYZ
-      Queue Size: 10
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Points
-      Topic: /filtered_points
-      Unreliable: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /filtered_points
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
     - Alpha: 1
-      Class: rviz/RobotModel
+      Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: ""
       Enabled: true
       Links:
         All Links Enabled: true
@@ -227,67 +190,135 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
       Name: RobotModel
-      Robot Description: robot_description
       TF Prefix: ""
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: NDT_Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /ndt_pose
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: NDT_Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 127
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /ndt_path
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Default Light: true
-    Fixed Frame: world
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
-    - Class: rviz/Interact
+    - Class: rviz_default_plugins/Interact
       Hide Inactive Objects: true
-    - Class: rviz/MoveCamera
-    - Class: rviz/Select
-    - Class: rviz/FocusCamera
-    - Class: rviz/Measure
-    - Class: rviz/SetInitialPose
-      Theta std deviation: 0.2617993950843811
-      Topic: /initialpose
-      X std deviation: 0.5
-      Y std deviation: 0.5
-    - Class: rviz/SetGoal
-      Topic: /move_base_simple/goal
-    - Class: rviz/PublishPoint
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+    - Class: rviz_default_plugins/SetInitialPose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /move_base_simple/goal
+    - Class: rviz_default_plugins/PublishPoint
       Single click: true
-      Topic: /clicked_point
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /clicked_point
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
   Value: true
   Views:
     Current:
-      Angle: 0.009999999776482582
-      Class: rviz/TopDownOrtho
+      Class: rviz_default_plugins/Orbit
+      Distance: 39.361820220947266
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: 1.4703627824783325
+        Y: 0.07238966226577759
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 52.414024353027344
+      Pitch: 0.4797963500022888
       Target Frame: base_link
-      Value: TopDownOrtho (rviz)
-      X: 1.4703627824783325
-      Y: 0.07238966226577759
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 2.5173890590667725
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1025
+  Height: 945
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001d900000345fc020000000efb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afc0000003d00000345000000c900fffffffa000000020100000003fb0000000a0049006d0061006700650000000000ffffffff0000000000000000fb0000000c00430061006d0065007200610000000000ffffffff0000000000000000fb000000100044006900730070006c0061007900730100000000000001360000015600fffffffb0000000a0049006d006100670065010000028e000000d20000000000000000fb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb000000120049006d006100670065005f0072006100770000000000ffffffff0000000000000000fb0000000c00430061006d006500720061000000024e000001710000000000000000fb000000120049006d00610067006500200052006100770100000421000000160000000000000000fb0000000a0049006d00610067006501000002f4000000cb0000000000000000fb00000016005900650073004e006f0042007500740074006f006e00000003210000007f0000004100ffffff000000010000016300000345fc0200000003fb0000000a00560069006500770073010000003d00000345000000a400fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000001200530065006c0065006300740069006f006e010000025a000000b20000000000000000000000020000073f000000a8fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073d0000005cfc0100000002fb0000000800540069006d006501000000000000073d000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000003f50000034500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000003000000000000019b0000031efc0200000003fb000000100044006900730070006c006100790073010000003b0000018e000000c700fffffffb0000001200530065006c0065006300740069006f006e01000001cf000000c20000005c00fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000297000000c20000005c00ffffff00000001000001000000031efc0200000001fb0000000a00560069006500770073010000003b0000031e000000a000ffffff000000030000078000000037fc0100000001fb0000000800540069006d00650100000000000007800000025300ffffff000004d90000031e00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -296,8 +327,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1853
-  X: 67
-  Y: 27
-  YesNoButton:
-    collapsed: false
+  Width: 1920
+  X: 1440
+  Y: 690
