@@ -11,25 +11,25 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='localizer_to_base_link',
-        arguments=['0', '0', '1.9', '3.1415926', '0', '0', 'base_link', 'ouster']
+        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'ouster']
     )
 
     # Static TF publisher: map to world
-    world_to_map_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='world_to_map',
-        arguments=['0', '0', '0', '0', '0', '0', 'map', 'world']
-    )
+    # world_to_map_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='world_to_map',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'map', 'world']
+    # )
 
-    livox_to_ouster_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='world_to_map',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'livox_frame']
-    )
+    # livox_to_ouster_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='world_to_map',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'livox_frame']
+    # )
     return LaunchDescription([
         localizer_to_base_link_tf,
-        world_to_map_tf,
-        livox_to_ouster_tf
+        # world_to_map_tf,
+        # livox_to_ouster_tf
     ])

@@ -53,7 +53,7 @@ def generate_launch_description():
     )
     resolution_arg = DeclareLaunchArgument(
         'resolution',
-        default_value='1.0',
+        default_value='0.3',
         description='The ND voxel grid resolution'
     )
     max_iterations_arg = DeclareLaunchArgument(
