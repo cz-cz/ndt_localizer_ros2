@@ -33,7 +33,7 @@ NdtLocalizerNode::NdtLocalizerNode(const rclcpp::NodeOptions & options) : Node("
         std::bind(&NdtLocalizerNode::callback_pointsmap, this, std::placeholders::_1));
 
     sensor_points_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        "filtered_points", 1,
+        "filtered_points", rclcpp::SensorDataQoS(),
         std::bind(&NdtLocalizerNode::callback_pointcloud, this, std::placeholders::_1));
 
     // 订阅里程计消息
@@ -148,10 +148,48 @@ void NdtLocalizerNode::callback_odom(const nav_msgs::msg::Odometry::SharedPtr od
     has_odom_ = true;
     RCLCPP_DEBUG(this->get_logger(), "Received odometry pose");
 }
+// pcl::PointCloud<pcl::PointXYZ>::Ptr NdtLocalizerNode::convertLivoxPointCloud(
+//     const sensor_msgs::msg::PointCloud2::SharedPtr point_cloud_msg)
+// {
+//     // 检查点云是否为空
+//     if (point_cloud_msg->data.empty()) {
+//         RCLCPP_ERROR(rclcpp::get_logger("ndt_localizer"), "PointCloud2 data is empty");
+//         return pcl::PointCloud<pcl::PointXYZ>::Ptr();
+//     }
 
+//     // 创建 PCL 点云
+//     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    
+    
+//     cloud->header.frame_id = point_cloud_msg->header.frame_id;
+    
+//     cloud->height = point_cloud_msg->height;
+//     cloud->width = point_cloud_msg->width;
+//     cloud->is_dense = point_cloud_msg->is_dense;
+//     cloud->points.resize(point_cloud_msg->width * point_cloud_msg->height);
+
+//     // 获取原始数据指针
+//     const uint8_t* data = point_cloud_msg->data.data();
+//     const size_t point_step = point_cloud_msg->point_step;
+//     const size_t num_points = point_cloud_msg->width * point_cloud_msg->height;
+
+//     // 遍历每个点（保持原有逻辑）
+//     for (size_t i = 0; i < num_points; ++i) {
+//         float x = *reinterpret_cast<const float*>(data + i * point_step + 0);
+//         float y = *reinterpret_cast<const float*>(data + i * point_step + 4);
+//         float z = *reinterpret_cast<const float*>(data + i * point_step + 8);
+        
+//         cloud->points[i].x = x;
+//         cloud->points[i].y = y;
+//         cloud->points[i].z = z;
+//     }
+
+//     return cloud;
+// }
 void NdtLocalizerNode::callback_pointcloud(
     const sensor_msgs::msg::PointCloud2::SharedPtr sensor_points_sensorTF_msg_ptr) {
     const auto exe_start_time = std::chrono::system_clock::now();
+          std::cout<<"-------------here-------"<<std::endl;
 
     // mutex Map
     std::lock_guard<std::mutex> lock(ndt_map_mtx_);
@@ -160,7 +198,8 @@ void NdtLocalizerNode::callback_pointcloud(
     pcl::PointCloud<pcl::PointXYZ>::Ptr sensor_points_sensorTF_ptr(
         new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*sensor_points_sensorTF_msg_ptr, *sensor_points_sensorTF_ptr);
-
+    
+    // sensor_points_sensorTF_ptr = convertLivoxPointCloud(sensor_points_sensorTF_msg_ptr);
     // get TF base to sensor
     geometry_msgs::msg::TransformStamped TF_base_to_sensor;
     if (!get_transform(base_frame_, sensor_frame, TF_base_to_sensor)) {
@@ -194,7 +233,7 @@ void NdtLocalizerNode::callback_pointcloud(
     // 优先使用里程计的位姿作为初始矩阵
     if (has_odom_) {
         initial_pose_matrix = odom_pose_matrix_;
-        RCLCPP_DEBUG(this->get_logger(), "Using odometry as initial pose");
+        RCLCPP_INFO(this->get_logger(), "---Using odometry as initial pose---------");
     } else {
         if (!init_pose){
             Eigen::Affine3d initial_pose_affine;
@@ -202,13 +241,13 @@ void NdtLocalizerNode::callback_pointcloud(
             initial_pose_matrix = initial_pose_affine.matrix().cast<float>();
             pre_trans = initial_pose_matrix;
             init_pose = true;
-            RCLCPP_INFO(this->get_logger(), "Using initial pose from topic");
+            RCLCPP_INFO(this->get_logger(), "-----Using initial pose from topic----------");
         } else {
             initial_pose_matrix = pre_trans * delta_trans;
-            RCLCPP_DEBUG(this->get_logger(), "Using previous pose as initial pose");
+            RCLCPP_INFO(this->get_logger(), "------Using previous pose as initial pose-------");
         }
     }
-
+    std::cout<<"-------------initial_pose_matrix-------"<<std::endl<<initial_pose_matrix<<std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     const auto align_start_time = std::chrono::system_clock::now();
     key_value_stdmap_["state"] = "Aligning";
@@ -226,6 +265,11 @@ void NdtLocalizerNode::callback_pointcloud(
     int iteration_num = ndt_->getFinalNumIteration();
     bool is_converged = true;
     static size_t skipping_publish_num = 0;
+    std::cout<<ndt_->getFitnessScore()<<"getFitnessScore"<<std::endl;
+    std::cout<<iteration_num<<"iteration_num"<<std::endl;
+    std::cout<<ndt_->getMaximumIterations() + 2<<"ndt_->getMaximumIterations() + 2"<<std::endl;
+    std::cout<<transform_probability<<"transform_probability"<<std::endl;
+    std::cout<<converged_param_transform_probability_ <<"converged_param_transform_probability_"<<std::endl;
 
     // 判断是否收敛
     if (
@@ -241,54 +285,54 @@ void NdtLocalizerNode::callback_pointcloud(
     }
 
     // 如果多次配准失败，尝试10个随机初始位姿
-    if (fail_count_ >= 3) {
-        RCLCPP_INFO(this->get_logger(), "多次配准失败，尝试10个随机初始位姿");
-        float best_prob = transform_probability;
-        Eigen::Matrix4f best_pose = result_pose_matrix;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr best_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        *best_cloud = *output_cloud;
+    // if (fail_count_ >= 3) {
+    //     RCLCPP_INFO(this->get_logger(), "多次配准失败，尝试10个随机初始位姿");
+    //     float best_prob = transform_probability;
+    //     Eigen::Matrix4f best_pose = result_pose_matrix;
+    //     pcl::PointCloud<pcl::PointXYZ>::Ptr best_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    //     *best_cloud = *output_cloud;
 
-        // 生成10个随机初始位姿
-        for (int i = 0; i < 10; i++) {
-            // 在地图范围内随机生成位置
-            float x = map_min_[0] + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (map_max_[0] - map_min_[0]);
-            float y = map_min_[1] + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (map_max_[1] - map_min_[1]);
-            float z = map_min_[2] + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (map_max_[2] - map_min_[2]);
-            // 随机生成旋转（绕z轴的yaw）
-            float yaw = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2 * M_PI;
-            Eigen::AngleAxisf roll_angle(0.0, Eigen::Vector3f::UnitX());
-            Eigen::AngleAxisf pitch_angle(0.0, Eigen::Vector3f::UnitY());
-            Eigen::AngleAxisf yaw_angle(yaw, Eigen::Vector3f::UnitZ());
-            Eigen::Affine3f pose_affine;
-            pose_affine.linear() = (yaw_angle * pitch_angle * roll_angle).toRotationMatrix();
-            pose_affine.translation() = Eigen::Vector3f(x, y, z);
-            Eigen::Matrix4f test_pose = pose_affine.matrix();
+    //     // 生成10个随机初始位姿
+    //     for (int i = 0; i < 10; i++) {
+    //         // 在地图范围内随机生成位置
+    //         float x = map_min_[0] + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (map_max_[0] - map_min_[0]);
+    //         float y = map_min_[1] + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (map_max_[1] - map_min_[1]);
+    //         float z = map_min_[2] + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (map_max_[2] - map_min_[2]);
+    //         // 随机生成旋转（绕z轴的yaw）
+    //         float yaw = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2 * M_PI;
+    //         Eigen::AngleAxisf roll_angle(0.0, Eigen::Vector3f::UnitX());
+    //         Eigen::AngleAxisf pitch_angle(0.0, Eigen::Vector3f::UnitY());
+    //         Eigen::AngleAxisf yaw_angle(yaw, Eigen::Vector3f::UnitZ());
+    //         Eigen::Affine3f pose_affine;
+    //         pose_affine.linear() = (yaw_angle * pitch_angle * roll_angle).toRotationMatrix();
+    //         pose_affine.translation() = Eigen::Vector3f(x, y, z);
+    //         Eigen::Matrix4f test_pose = pose_affine.matrix();
 
-            pcl::PointCloud<pcl::PointXYZ>::Ptr test_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-            ndt_->align(*test_cloud, test_pose);
-            float prob = ndt_->getTransformationProbability();
-            RCLCPP_INFO(this->get_logger(), "尝试第%d个初始位姿，概率：%f", i+1, prob);
+    //         pcl::PointCloud<pcl::PointXYZ>::Ptr test_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    //         ndt_->align(*test_cloud, test_pose);
+    //         float prob = ndt_->getTransformationProbability();
+    //         RCLCPP_INFO(this->get_logger(), "尝试第%d个初始位姿，概率：%f", i+1, prob);
 
-            if (prob > best_prob) {
-                best_prob = prob;
-                best_pose = ndt_->getFinalTransformation();
-                *best_cloud = *test_cloud;
-            }
-        }
+    //         if (prob > best_prob) {
+    //             best_prob = prob;
+    //             best_pose = ndt_->getFinalTransformation();
+    //             *best_cloud = *test_cloud;
+    //         }
+    //     }
 
-        // 使用最优的结果
-        result_pose_matrix = best_pose;
-        *output_cloud = *best_cloud;
-        transform_probability = best_prob;
-        iteration_num = ndt_->getFinalNumIteration();
-        is_converged = (best_prob >= converged_param_transform_probability_);
-        if (is_converged) {
-            fail_count_ = 0; // 成功，重置失败计数器
-            RCLCPP_INFO(this->get_logger(), "随机初始位姿配准成功，最优概率：%f", best_prob);
-        } else {
-            RCLCPP_INFO(this->get_logger(), "随机初始位姿配准仍失败，最优概率：%f", best_prob);
-        }
-    }
+    //     // 使用最优的结果
+    //     result_pose_matrix = best_pose;
+    //     *output_cloud = *best_cloud;
+    //     transform_probability = best_prob;
+    //     iteration_num = ndt_->getFinalNumIteration();
+    //     is_converged = (best_prob >= converged_param_transform_probability_);
+    //     if (is_converged) {
+    //         fail_count_ = 0; // 成功，重置失败计数器
+    //         RCLCPP_INFO(this->get_logger(), "随机初始位姿配准成功，最优概率：%f", best_prob);
+    //     } else {
+    //         RCLCPP_INFO(this->get_logger(), "随机初始位姿配准仍失败，最优概率：%f", best_prob);
+    //     }
+    // }
 
     // calculate the delta tf from pre_trans to current_trans
     delta_trans = pre_trans.inverse() * result_pose_matrix;
@@ -309,8 +353,29 @@ void NdtLocalizerNode::callback_pointcloud(
     if (is_converged) {
         ndt_pose_pub_->publish(result_pose_stamped_msg);
     }
-    // publish tf(map frame to base frame)
-    publish_tf(map_frame_, base_frame_, result_pose_stamped_msg);
+    // 计算map到odom的变换
+    Eigen::Matrix4f T_map_odom;
+    if (has_odom_) {
+        // 已知：T_map_base（定位结果，map到base_link的变换）、T_base_odom（里程计，base_link到odom的变换）
+        // 目标：计算map到odom的变换，直接相乘即可（无需求逆，适配当前里程计frame配置）
+        T_map_odom = result_pose_matrix * odom_pose_matrix_;
+    } else {
+        // 没有里程计时，odom和base_link重合，所以T_map_odom = T_map_base
+        T_map_odom = result_pose_matrix;
+    }
+
+    // 转换为PoseStamped
+    Eigen::Affine3d T_map_odom_affine;
+    T_map_odom_affine.matrix() = T_map_odom.cast<double>();
+    geometry_msgs::msg::Pose T_map_odom_pose = tf2::toMsg(T_map_odom_affine);
+
+    geometry_msgs::msg::PoseStamped map_odom_pose_stamped;
+    map_odom_pose_stamped.header.stamp = sensor_ros_time;
+    map_odom_pose_stamped.header.frame_id = map_frame_;
+    map_odom_pose_stamped.pose = T_map_odom_pose;
+
+    // 发布map到odom的TF
+    publish_tf(map_frame_, odom_frame_, map_odom_pose_stamped);
     // publish aligned point cloud
     pcl::PointCloud<pcl::PointXYZ>::Ptr sensor_points_mapTF_ptr(new pcl::PointCloud<pcl::PointXYZ>);
 
@@ -354,13 +419,16 @@ void NdtLocalizerNode::callback_pointcloud(
 void NdtLocalizerNode::init_params(){
     // 声明参数
     this->declare_parameter<std::string>("base_frame", "base_link");
+    this->declare_parameter<std::string>("odom_frame", "odom");
     this->declare_parameter<double>("trans_epsilon", 0.01);
     this->declare_parameter<double>("step_size", 0.1);
     this->declare_parameter<double>("resolution", 1.0);
     this->declare_parameter<int>("max_iterations", 30);
-    this->declare_parameter<double>("converged_param_transform_probability", 0.95);
+    this->declare_parameter<double>("converged_param_transform_probability", 0.8);
     base_frame_ = this->get_parameter("base_frame").as_string();
+    odom_frame_ = this->get_parameter("odom_frame").as_string();
     RCLCPP_INFO(this->get_logger(), "base_frame_id: %s", base_frame_.c_str());
+    RCLCPP_INFO(this->get_logger(), "odom_frame_id: %s", odom_frame_.c_str());
     double trans_epsilon = this->get_parameter("trans_epsilon").as_double();
     double step_size = this->get_parameter("step_size").as_double();
     double resolution = this->get_parameter("resolution").as_double();

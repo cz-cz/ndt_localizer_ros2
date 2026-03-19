@@ -12,13 +12,13 @@ def generate_launch_description():
     # Declare arguments
     input_sensor_points_topic_arg = DeclareLaunchArgument(
         'input_sensor_points_topic',
-        # default_value='/livox/points',
-        default_value='/mapping/LaserframeXYZI',
+        default_value='/livox/points',
+        # default_value='/mapping/LaserframeXYZI',
         description='Sensor points topic'
     )
     input_initial_pose_topic_arg = DeclareLaunchArgument(
         'input_initial_pose_topic',
-        default_value='/ekf_pose_with_covariance',
+        default_value='/initialpose',
         description='Initial position topic to align'
     )
     input_map_points_topic_arg = DeclareLaunchArgument(
@@ -41,6 +41,11 @@ def generate_launch_description():
         default_value='base_link',
         description='Vehicle reference frame'
     )
+    odom_frame_arg = DeclareLaunchArgument(
+        'odom_frame',
+        default_value='odom',
+        description='Odometry reference frame'
+    )
     trans_epsilon_arg = DeclareLaunchArgument(
         'trans_epsilon',
         default_value='0.05',
@@ -53,7 +58,7 @@ def generate_launch_description():
     )
     resolution_arg = DeclareLaunchArgument(
         'resolution',
-        default_value='0.3',
+        default_value='0.1',
         description='The ND voxel grid resolution'
     )
     max_iterations_arg = DeclareLaunchArgument(
@@ -99,6 +104,7 @@ def generate_launch_description():
         ],
         parameters=[
             {'base_frame': LaunchConfiguration('base_frame')},
+            {'odom_frame': LaunchConfiguration('odom_frame')},
             {'trans_epsilon': LaunchConfiguration('trans_epsilon')},
             {'step_size': LaunchConfiguration('step_size')},
             {'resolution': LaunchConfiguration('resolution')},
@@ -114,6 +120,7 @@ def generate_launch_description():
         output_pose_topic_arg,
         output_diagnostics_topic_arg,
         base_frame_arg,
+        odom_frame_arg,
         trans_epsilon_arg,
         step_size_arg,
         resolution_arg,

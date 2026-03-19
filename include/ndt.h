@@ -77,6 +77,7 @@ private:
 
     // Parameters
     std::string base_frame_;
+    std::string odom_frame_;
     std::string map_frame_;
     double converged_param_transform_probability_;
 
@@ -95,6 +96,8 @@ private:
     // Map bounds for random initialization
     Eigen::Vector4f map_min_;
     Eigen::Vector4f map_max_;
+    // pcl::PointCloud<pcl::PointXYZ>::Ptr convertLivoxPointCloud(
+    // const sensor_msgs::msg::PointCloud2::SharedPtr point_cloud_msg);
 };
 
 #endif // NDT_LOCALIZER_H
