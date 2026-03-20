@@ -19,6 +19,7 @@
     <depend>geometry_msgs</depend>
     <depend>nav_msgs</depend>
     <depend>diagnostic_msgs</depend>
+    <depend>small_gicp</depend>
     <exec_depend>rosidl_default_runtime</exec_depend>
     <member_of_group>rosidl_interface_packages</member_of_group>
     <export>

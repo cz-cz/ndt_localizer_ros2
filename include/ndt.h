@@ -19,7 +19,7 @@
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/registration/gicp.h>
+#include <small_gicp/pcl/pcl_registration.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <string>
@@ -63,8 +63,8 @@ private:
     tf2_ros::Buffer tf2_buffer_;
     tf2_ros::TransformListener tf2_listener_;
     tf2_ros::TransformBroadcaster tf2_broadcaster_;
-    // PCL GICP (replaced original NDT matching)
-    pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ>::Ptr ndt_;
+    // Small-GICP (replaced PCL GICP, originally replaced NDT matching)
+    small_gicp::RegistrationPCL<pcl::PointXYZ, pcl::PointXYZ>::Ptr ndt_;
     std::mutex ndt_map_mtx_;
     // Parameters
     std::string base_frame_;

@@ -17,6 +17,7 @@ find_package(pcl_conversions REQUIRED)
 find_package(pcl_ros REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(PCL REQUIRED QUIET)
+find_package(small_gicp REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   msgs/NdtStat.msg
@@ -76,6 +77,7 @@ ament_target_dependencies(ndt_localizer_node
 )
 target_link_libraries(ndt_localizer_node
   ${PCL_LIBRARIES}
+  small_gicp::small_gicp
 )
 
 install(TARGETS

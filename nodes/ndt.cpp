@@ -6,9 +6,9 @@ NdtLocalizerNode::NdtLocalizerNode(const rclcpp::NodeOptions & options) : Node("
     key_value_stdmap_["state"] = "Initializing";
     // 初始化随机种子
     srand(time(NULL));
-    // 初始化 GICP (替换了原来的NDT)
-    ndt_ = pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ>::Ptr(
-        new pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ>());
+    // 初始化 Small-GICP (替换了原来的PCL GICP)
+    ndt_ = small_gicp::RegistrationPCL<pcl::PointXYZ, pcl::PointXYZ>::Ptr(
+        new small_gicp::RegistrationPCL<pcl::PointXYZ, pcl::PointXYZ>());
     init_params();
     // Publishers
     sensor_aligned_pose_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("points_aligned", 10);
@@ -39,12 +39,12 @@ NdtLocalizerNode::NdtLocalizerNode(const rclcpp::NodeOptions & options) : Node("
     fail_count_ = 0;
     has_odom_ = false;
     odom_pose_matrix_ = Eigen::Matrix4f::Identity();
-    RCLCPP_INFO(this->get_logger(), "GICP Localizer initialized (PCL 1.12 compatible, replaced original NDT matching)");
+    RCLCPP_INFO(this->get_logger(), "Small-GICP Localizer initialized (replaced PCL GICP)");
 }
 NdtLocalizerNode::~NdtLocalizerNode() {}
 void NdtLocalizerNode::timer_diagnostic() {
     diagnostic_msgs::msg::DiagnosticStatus diag_status_msg;
-    diag_status_msg.name = "gicp_scan_matcher";
+    diag_status_msg.name = "small_gicp_scan_matcher";
     diag_status_msg.hardware_id = "";
     for (const auto & key_value : key_value_stdmap_) {
         diagnostic_msgs::msg::KeyValue key_value_msg;
@@ -91,7 +91,7 @@ void NdtLocalizerNode::callback_init_pose(
     }
     // if click the initpose again, re init!
     init_pose = false;
-    RCLCPP_INFO(this->get_logger(), "Received initial pose, will use it for GICP matching");
+    RCLCPP_INFO(this->get_logger(), "Received initial pose, will use it for Small-GICP matching");
 }
 void NdtLocalizerNode::callback_pointsmap(
     const sensor_msgs::msg::PointCloud2::SharedPtr map_points_msg_ptr) {
@@ -101,8 +101,8 @@ void NdtLocalizerNode::callback_pointsmap(
     const auto fitness_epsilon = ndt_->getEuclideanFitnessEpsilon();
     const auto max_iterations = ndt_->getMaximumIterations();
     // 创建新的GICP实例（使用指针避免PCL 1.12的拷贝赋值问题）
-    pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ>::Ptr ndt_new(
-        new pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ>());
+    small_gicp::RegistrationPCL<pcl::PointXYZ, pcl::PointXYZ>::Ptr ndt_new(
+        new small_gicp::RegistrationPCL<pcl::PointXYZ, pcl::PointXYZ>());
     ndt_new->setTransformationEpsilon(trans_epsilon);
     ndt_new->setMaxCorrespondenceDistance(max_corr_dist);
     ndt_new->setEuclideanFitnessEpsilon(fitness_epsilon);
@@ -119,7 +119,7 @@ void NdtLocalizerNode::callback_pointsmap(
     // swap，直接替换指针，无需拷贝，完全兼容PCL 1.12
     std::lock_guard<std::mutex> lock(ndt_map_mtx_);
     ndt_ = ndt_new;
-    RCLCPP_INFO(this->get_logger(), "Map loaded: %zu points, ready for GICP matching (PCL 1.12 compatible)", map_points_ptr->size());
+    RCLCPP_INFO(this->get_logger(), "Map loaded: %zu points, ready for Small-GICP matching", map_points_ptr->size());
 }
 void NdtLocalizerNode::callback_odom(const nav_msgs::msg::Odometry::SharedPtr odom_msg_ptr) {
     // 将里程计的位姿转换为Eigen矩阵，作为GICP的初始位姿
@@ -127,7 +127,7 @@ void NdtLocalizerNode::callback_odom(const nav_msgs::msg::Odometry::SharedPtr od
     tf2::fromMsg(odom_msg_ptr->pose.pose, odom_affine);
     odom_pose_matrix_ = odom_affine.matrix().cast<float>();
     has_odom_ = true;
-    RCLCPP_DEBUG(this->get_logger(), "Received odometry pose, will use as GICP initial pose");
+    RCLCPP_DEBUG(this->get_logger(), "Received odometry pose, will use as Small-GICP initial pose");
 }
 // pcl::PointCloud<pcl::PointXYZ>::Ptr NdtLocalizerNode::convertLivoxPointCloud(
 //     const sensor_msgs::msg::PointCloud2::SharedPtr point_cloud_msg)
@@ -204,7 +204,7 @@ void NdtLocalizerNode::callback_pointcloud(
     Eigen::Matrix4f initial_pose_matrix;
     if (has_odom_) {
         initial_pose_matrix = odom_pose_matrix_;
-        RCLCPP_INFO(this->get_logger(), "---Using odometry as GICP initial pose---------");
+        RCLCPP_INFO(this->get_logger(), "---Using odometry as Small-GICP initial pose---------");
     } else {
         if (!init_pose){
             Eigen::Affine3d initial_pose_affine;
@@ -212,13 +212,13 @@ void NdtLocalizerNode::callback_pointcloud(
             initial_pose_matrix = initial_pose_affine.matrix().cast<float>();
             pre_trans = initial_pose_matrix;
             init_pose = true;
-            RCLCPP_INFO(this->get_logger(), "-----Using initial pose from topic as GICP initial pose----------");
+            RCLCPP_INFO(this->get_logger(), "-----Using initial pose from topic as Small-GICP initial pose----------");
         } else {
             initial_pose_matrix = pre_trans * delta_trans;
-            RCLCPP_INFO(this->get_logger(), "------Using previous pose as GICP initial pose-------");
+            RCLCPP_INFO(this->get_logger(), "------Using previous pose as Small-GICP initial pose-------");
         }
     }
-    std::cout<<"-------------GICP initial_pose_matrix-------"<<std::endl<<initial_pose_matrix<<std::endl;
+    std::cout<<"-------------Small-GICP initial_pose_matrix-------"<<std::endl<<initial_pose_matrix<<std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     const auto align_start_time = std::chrono::system_clock::now();
     key_value_stdmap_["state"] = "Aligning";
@@ -248,7 +248,7 @@ void NdtLocalizerNode::callback_pointcloud(
         is_converged = false;
         ++skipping_publish_num;
         fail_count_++;
-        RCLCPP_INFO(this->get_logger(), "GICP Not Converged, fail count: %d", fail_count_);
+        RCLCPP_INFO(this->get_logger(), "Small-GICP Not Converged, fail count: %d", fail_count_);
     } else {
         skipping_publish_num = 0;
         fail_count_ = 0; // 成功，重置失败计数器
