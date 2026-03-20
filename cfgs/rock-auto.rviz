@@ -5,6 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /NDT_Pose1
+        - /PointCloud21
       Splitter Ratio: 0.6958039999008179
     Tree Height: 339
   - Class: rviz_common/Selection
@@ -53,11 +55,11 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
+        livox_frame:
+          Value: true
         map:
           Value: true
         ouster:
-          Value: true
-        world:
           Value: true
       Marker Scale: 5
       Name: TF
@@ -66,8 +68,11 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          world:
-            {}
+          base_link:
+            livox_frame:
+              {}
+            ouster:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 0.5
@@ -209,7 +214,7 @@ Visualization Manager:
       Name: NDT_Pose
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
-      Shape: Arrow
+      Shape: Axes
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -245,6 +250,40 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /ndt_path
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 7.375572204589844
+        Min Value: -2.7218093872070312
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: AxisColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /points_aligned
+      Use Fixed Frame: true
+      Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
@@ -292,25 +331,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 39.361820220947266
+      Distance: 23.728647232055664
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.4703627824783325
-        Y: 0.07238966226577759
-        Z: 0
+        X: -8.70040512084961
+        Y: 0.318921834230423
+        Z: -0.33161139488220215
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4797963500022888
+      Pitch: 0.704795777797699
       Target Frame: base_link
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.5173890590667725
+      Yaw: 5.05739164352417
     Saved: ~
 Window Geometry:
   Displays:

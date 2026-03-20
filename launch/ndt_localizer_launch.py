@@ -5,10 +5,8 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
-
 def generate_launch_description():
     pkg_share = get_package_share_directory('ndt_localizer')
-
     # Declare arguments
     input_sensor_points_topic_arg = DeclareLaunchArgument(
         'input_sensor_points_topic',
@@ -19,7 +17,7 @@ def generate_launch_description():
     input_initial_pose_topic_arg = DeclareLaunchArgument(
         'input_initial_pose_topic',
         default_value='/initialpose',
-        description='Initial position topic to align'
+        description='Initial position topic to align, will be used as GICP initial pose'
     )
     input_map_points_topic_arg = DeclareLaunchArgument(
         'input_map_points_topic',
@@ -48,48 +46,41 @@ def generate_launch_description():
     )
     trans_epsilon_arg = DeclareLaunchArgument(
         'trans_epsilon',
-        default_value='0.05',
+        default_value='0.01',
         description='The maximum difference between two consecutive transformations in order to consider convergence'
     )
-    step_size_arg = DeclareLaunchArgument(
-        'step_size',
-        default_value='0.1',
-        description='The newton line search maximum step length'
+    # GICP 参数，替换了原来的NDT的step_size和resolution
+    max_corr_dist_arg = DeclareLaunchArgument(
+        'max_correspondence_distance',
+        default_value='1.0',
+        description='Maximum distance between corresponding points for GICP'
     )
-    resolution_arg = DeclareLaunchArgument(
-        'resolution',
-        default_value='0.1',
-        description='The ND voxel grid resolution'
+    fitness_epsilon_arg = DeclareLaunchArgument(
+        'euclidean_fitness_epsilon',
+        default_value='0.01',
+        description='Maximum error threshold for GICP convergence'
     )
     max_iterations_arg = DeclareLaunchArgument(
         'max_iterations',
         default_value='30',
         description='The number of iterations required to calculate alignment'
     )
-    converged_param_transform_probability_arg = DeclareLaunchArgument(
-        'converged_param_transform_probability',
-        default_value='3.0',
-        description='Convergence parameter for transform probability'
+    converged_param_fitness_score_arg = DeclareLaunchArgument(
+        'converged_param_fitness_score',
+        default_value='1.0',
+        description='Convergence parameter: maximum allowed fitness score (error)'
     )
-
     # Include other launch files
     static_tf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_share, 'launch', 'static_tf_launch.py'))
     )
-
     map_loader_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_share, 'launch', 'map_loader_launch.py'))
     )
-
     points_downsample_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_share, 'launch', 'points_downsample_launch.py'))
     )
-
-    # lexus_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(os.path.join(pkg_share, 'launch', 'lexus_launch.py'))
-    # )
-
-    # NDT Localizer Node
+    # GICP Localizer Node (replaced original NDT node)
     ndt_localizer_node = Node(
         package='ndt_localizer',
         executable='ndt_localizer_node',
@@ -106,13 +97,12 @@ def generate_launch_description():
             {'base_frame': LaunchConfiguration('base_frame')},
             {'odom_frame': LaunchConfiguration('odom_frame')},
             {'trans_epsilon': LaunchConfiguration('trans_epsilon')},
-            {'step_size': LaunchConfiguration('step_size')},
-            {'resolution': LaunchConfiguration('resolution')},
+            {'max_correspondence_distance': LaunchConfiguration('max_correspondence_distance')},
+            {'euclidean_fitness_epsilon': LaunchConfiguration('euclidean_fitness_epsilon')},
             {'max_iterations': LaunchConfiguration('max_iterations')},
-            {'converged_param_transform_probability': LaunchConfiguration('converged_param_transform_probability')}
+            {'converged_param_fitness_score': LaunchConfiguration('converged_param_fitness_score')}
         ]
     )
-
     return LaunchDescription([
         input_sensor_points_topic_arg,
         input_initial_pose_topic_arg,
@@ -122,13 +112,12 @@ def generate_launch_description():
         base_frame_arg,
         odom_frame_arg,
         trans_epsilon_arg,
-        step_size_arg,
-        resolution_arg,
+        max_corr_dist_arg,
+        fitness_epsilon_arg,
         max_iterations_arg,
-        converged_param_transform_probability_arg,
+        converged_param_fitness_score_arg,
         static_tf_launch,
         map_loader_launch,
         points_downsample_launch,
-        ndt_localizer_node,
-        # lexus_launch
+        ndt_localizer_node
     ])
