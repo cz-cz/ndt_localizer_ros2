@@ -48,10 +48,6 @@ private:
     // Publishers
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr sensor_aligned_pose_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr ndt_pose_pub_;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr exe_time_pub_;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr transform_probability_pub_;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr iteration_num_pub_;
-    rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_;
     // Subscribers
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_sub_;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr map_points_sub_;
@@ -87,5 +83,6 @@ private:
     Eigen::Vector4f map_max_;
     // pcl::PointCloud<pcl::PointXYZ>::Ptr convertLivoxPointCloud(
     // const sensor_msgs::msg::PointCloud2::SharedPtr point_cloud_msg);
+    Eigen::Matrix4f T_map_odom_good_save_; 
 };
 #endif // NDT_LOCALIZER_H

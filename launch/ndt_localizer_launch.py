@@ -10,8 +10,8 @@ def generate_launch_description():
     # Declare arguments
     input_sensor_points_topic_arg = DeclareLaunchArgument(
         'input_sensor_points_topic',
-        default_value='/livox/points',
-        # default_value='/mapping/LaserframeXYZI',
+        # default_value='/livox/points',
+        default_value='/mapping/LaserframeXYZI',
         description='Sensor points topic'
     )
     input_initial_pose_topic_arg = DeclareLaunchArgument(
